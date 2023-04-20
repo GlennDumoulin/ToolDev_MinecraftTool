@@ -104,25 +104,41 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			{
 				if (inputArg.compare(argv[i]) == 0) //Check input args
 				{
-					if (IsValidFileArg(argv[i + 1], L"json"))
+					if (inputFilename.compare(L"") == 0)
 					{
-						inputFilename = argv[i + 1];
+						if (IsValidFileArg(argv[i + 1], L"json"))
+						{
+							inputFilename = argv[i + 1];
+						}
+						else
+						{
+							PrintErrorMsg(L"Input has to be .json!");
+							return -1;
+						}
 					}
 					else
 					{
-						PrintErrorMsg(L"Input has to be .json");
+						PrintErrorMsg(L"Multiple inputs were given!");
 						return -1;
 					}
 				}
 				else if (outputArg.compare(argv[i]) == 0) //Check output args
 				{
-					if (IsValidFileArg(argv[i + 1], L"obj"))
+					if (outputFilename.compare(L"") == 0)
 					{
-						outputFilename = argv[i + 1];
+						if (IsValidFileArg(argv[i + 1], L"obj"))
+						{
+							outputFilename = argv[i + 1];
+						}
+						else
+						{
+							PrintErrorMsg(L"Output has to be .obj!");
+							return -1;
+						}
 					}
 					else
 					{
-						PrintErrorMsg(L"Output has to be .obj");
+						PrintErrorMsg(L"Multiple outputs were given!");
 						return -1;
 					}
 				}
