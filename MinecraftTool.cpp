@@ -106,7 +106,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				{
 					if (inputFilename.compare(L"") == 0)
 					{
-						if (IsValidFileArg(argv[i + 1], L"json"))
+						if (IsValidFileArg(argv[i + 1], L".json"))
 						{
 							inputFilename = argv[i + 1];
 						}
@@ -126,7 +126,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				{
 					if (outputFilename.compare(L"") == 0)
 					{
-						if (IsValidFileArg(argv[i + 1], L"obj"))
+						if (IsValidFileArg(argv[i + 1], L".obj"))
 						{
 							outputFilename = argv[i + 1];
 						}
@@ -265,6 +265,11 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 							wprintf_s(L"Failed to create output file!\n");
 							return -1;
 						}
+					}
+					else
+					{
+						wprintf_s(L"Failed to parse input file!\n");
+						return -1;
 					}
 				}
 				else
