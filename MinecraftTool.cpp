@@ -142,6 +142,16 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 						return -1;
 					}
 				}
+				else
+				{
+					std::wstringstream errorMsg;
+					errorMsg << L"Unknown argument identifier (";
+					errorMsg << argv[i];
+					errorMsg << L")!";
+
+					PrintErrorMsg(errorMsg.str());
+					return -1;
+				}
 			}
 
 			//Check file names
@@ -430,9 +440,13 @@ void PrintUsageMsg()
 	wprintf_s(L"Usage:\n");
 	wprintf_s(L"\t(help): minecrafttool\n");
 	wprintf_s(L"\t(help): minecrafttool help\n");
-	wprintf_s(L"\t(default output): minecrafttool -i <inputFile>.json\n");
-	wprintf_s(L"\t(given output): minecrafttool -i <inputFile>.json -o <outputFile>.obj\n");
-	wprintf_s(L"\t(given output): minecrafttool -o <outputFile>.obj -i <inputFile>.json\n");
+	wprintf_s(L"\t(command structure): minecrafttool [<arg_identifier> <arg_value>]\n");
+	wprintf_s(L"\t(required arguments):\n");
+	wprintf_s(L"\t\t-i <inputFile>.json\n");
+	wprintf_s(L"\t(optional arguments):\n");
+	wprintf_s(L"\t\t-o <outputFile>.obj\n");
+	wprintf_s(L"\n");
+	wprintf_s(L"Argument order does not matter!\n");
 	wprintf_s(L"\n");
 }
 void PrintErrorMsg(const std::wstring& customError)
@@ -442,5 +456,6 @@ void PrintErrorMsg(const std::wstring& customError)
 	{
 		wprintf_s(L"Message: %s\n", customError.c_str());
 	}
+	wprintf_s(L"\n");
 	PrintUsageMsg();
 }
