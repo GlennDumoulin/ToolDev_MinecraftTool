@@ -71,23 +71,21 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 	const std::wstring cmdName{ L"minecrafttool" };
 	const std::wstring helpArg{ L"help" };
 
-	if (argc == 1)
+	if (argc <= 2)
 	{
 		if (cmdName.compare(argv[0]) == 0)
 		{
+			if (argc == 2 && helpArg.compare(argv[1]) != 0)
+			{
+				PrintErrorMsg();
+				return -1;
+			}
+
 			PrintUsageMsg();
 			return 0;
 		}
 	}
-	else if (argc == 2)
-	{
-		if (cmdName.compare(argv[0]) == 0 && helpArg.compare(argv[1]) == 0)
-		{
-			PrintUsageMsg();
-			return 0;
-		}
-	}
-	else if (argc == 3 || argc == 5)
+	else if (argc % 2 == 1)
 	{
 		//Check arguments
 		if (cmdName.compare(argv[0]) == 0)
