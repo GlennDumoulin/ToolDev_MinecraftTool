@@ -4,6 +4,13 @@
 
 #include "CommonCode.h"
 
+enum class OutputLocationStatus
+{
+	UNDEFINED,
+	CMD,
+	INPUT,
+};
+
 bool IsValidFileArg(const wchar_t* arg, const wchar_t* extension);
 
 void PrintUsageMsg();
@@ -29,9 +36,12 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 		//Check arguments
 		const std::wstring inputArg{ L"-i" };
 		const std::wstring outputArg{ L"-o" };
+		const std::wstring locationArg{ L"-l" };
 
 		std::wstring inputFilename{ L"" };
 		std::wstring outputFilename{ L"" };
+		
+		OutputLocationStatus locationStatus{ OutputLocationStatus::UNDEFINED };
 
 		for (int i{ 1 }; i < argc; i += 2)
 		{
@@ -75,6 +85,34 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 					return -1;
 				}
 			}
+			else if (locationArg.compare(argv[i]) == 0) //Check location args
+			{
+				if (locationStatus == OutputLocationStatus::UNDEFINED)
+				{
+					//Check argument value
+					const std::wstring cmdValue{ L"cmd" };
+					const std::wstring inputValue{ L"input" };
+
+					if (cmdValue.compare(argv[i + 1]) == 0) //Handle cmd value
+					{
+						locationStatus = OutputLocationStatus::CMD;
+					}
+					else if (inputValue.compare(argv[i + 1]) == 0) //Handle input value
+					{
+						locationStatus = OutputLocationStatus::INPUT;
+					}
+					else //Handle other values
+					{
+						PrintErrorMsg(L"Unknown location value!");
+						return -1;
+					}
+				}
+				else
+				{
+					PrintErrorMsg(L"Multiple locations were given!");
+					return -1;
+				}
+			}
 			else
 			{
 				std::wstringstream errorMsg;
@@ -98,6 +136,39 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				const std::wstring jsonExtension{ L".json" };
 				const size_t extensionIdx{ outputFilename.rfind(jsonExtension.c_str()) };
 				outputFilename.replace(extensionIdx, jsonExtension.length(), L".obj");
+			}
+
+			//Set output location
+			switch (locationStatus)
+			{
+			case OutputLocationStatus::CMD:
+			{
+				const size_t lastSlashIdx{ outputFilename.rfind(L"\\") };
+				if (lastSlashIdx != std::wstring::npos)
+					outputFilename.replace(0, lastSlashIdx + 1, L"");
+				break;
+			}
+			case OutputLocationStatus::INPUT:
+			{
+				const size_t lastInputSlashIdx{ inputFilename.rfind(L"\\") };
+				const std::wstring inputLocationStr{ inputFilename.substr(
+					0,
+					(lastInputSlashIdx != std::wstring::npos) ? lastInputSlashIdx + 1 : 0
+				) };
+
+				const size_t lastOutputSlashIdx{ outputFilename.rfind(L"\\") };
+				outputFilename.replace(
+					0,
+					(lastOutputSlashIdx != std::wstring::npos) ? lastOutputSlashIdx + 1 : 0,
+					inputLocationStr
+				);
+
+				break;
+			}
+
+			case OutputLocationStatus::UNDEFINED:
+			default:
+				break;
 			}
 
 			return commonCode::ConvertJsonToObj(inputFilename, outputFilename);
@@ -133,11 +204,30 @@ void PrintUsageMsg()
 	wprintf_s(L"\t(help): cmdMinecraftTool\n");
 	wprintf_s(L"\t(help): cmdMinecraftTool help\n");
 	wprintf_s(L"\t(command structure): cmdMinecraftTool [<arg_identifier> <arg_value>]\n");
+
 	wprintf_s(L"\t(required arguments):\n");
 	wprintf_s(L"\t\t-i <inputFile>.json\n");
+	wprintf_s(L"\t\t\tinputFile --> name of input file, can also include path to different directory\n");
+
 	wprintf_s(L"\t(optional arguments):\n");
 	wprintf_s(L"\t\t-o <outputFile>.obj\n");
+	wprintf_s(L"\t\t\toutputFile --> name of output file, can also include path to different directory\n");
+	wprintf_s(L"\t\t\t\tnot defined --> outputFile == inputFile, also copies path to input file directory\n");
+	wprintf_s(L"\t\t-l <cmd|input>\n");
+	wprintf_s(L"\t\t\tcmd --> output file location == current cmd location\n");
+	wprintf_s(L"\t\t\tinput --> output file location == input file location\n");
+	wprintf_s(L"\t\t\t\tnot defined --> output file location is unchanged\n");
 	wprintf_s(L"\n");
+
+	wprintf_s(L"Examples:\n");
+	wprintf_s(L"\tcmdMinecraftTool -i ..\\myInput.json\n");
+	wprintf_s(L"\t\tresulting output: ..\\myInput.obj\n");
+	wprintf_s(L"\tcmdMinecraftTool -i ..\\myInput.json -o myOutput.obj\n");
+	wprintf_s(L"\t\tresulting output: myOutput.obj\n");
+	wprintf_s(L"\tcmdMinecraftTool -i ..\\myInput.json -o myOutput.obj -l input\n");
+	wprintf_s(L"\t\tresulting output: ..\\myOutput.obj\n");
+	wprintf_s(L"\n");
+
 	wprintf_s(L"Argument order does not matter!\n");
 	wprintf_s(L"\n");
 }
