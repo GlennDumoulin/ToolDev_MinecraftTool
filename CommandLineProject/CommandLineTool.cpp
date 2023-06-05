@@ -14,6 +14,7 @@ enum class OutputLocationStatus
 bool IsValidFileArg(const wchar_t* arg, const wchar_t* extension);
 
 void PrintUsageMsg();
+void PrintArgsMsg();
 void PrintErrorMsg(const std::wstring& customError = L"");
 
 int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
@@ -21,13 +22,27 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 	if (argc <= 2)
 	{
 		const std::wstring helpArg{ L"help" };
-		
-		if (argc == 2 && helpArg.compare(argv[1]) != 0)
+		const std::wstring argsArg{ L"args" };
+
+		if (argc == 2)
 		{
+			if (helpArg.compare(argv[1]) == 0) //Print help message
+			{
+				PrintUsageMsg();
+				return 0;
+			}
+			else if (argsArg.compare(argv[1]) == 0) //Print arguments message
+			{
+				PrintArgsMsg();
+				return 0;
+			}
+			
+			//Print error message
 			PrintErrorMsg();
 			return -1;
 		}
 
+		//Print help message
 		PrintUsageMsg();
 		return 0;
 	}
@@ -37,11 +52,13 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 		const std::wstring inputArg{ L"-i" };
 		const std::wstring outputArg{ L"-o" };
 		const std::wstring locationArg{ L"-l" };
+		const std::wstring reportArg{ L"-r" };
 
 		std::wstring inputFilename{ L"" };
 		std::wstring outputFilename{ L"" };
 		
 		OutputLocationStatus locationStatus{ OutputLocationStatus::UNDEFINED };
+		commonCode::ReportStatus reportStatus{ commonCode::ReportStatus::UNDEFINED };
 
 		for (int i{ 1 }; i < argc; i += 2)
 		{
@@ -113,6 +130,34 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 					return -1;
 				}
 			}
+			else if (reportArg.compare(argv[i]) == 0) //Check report args
+			{
+				if (reportStatus == commonCode::ReportStatus::UNDEFINED)
+				{
+					//Check argument value
+					const std::wstring blocksValue{ L"blocks" };
+					const std::wstring layersValue{ L"layers" };
+
+					if (blocksValue.compare(argv[i + 1]) == 0) //Handle blocks value
+					{
+						reportStatus = commonCode::ReportStatus::BLOCKS;
+					}
+					else if (layersValue.compare(argv[i + 1]) == 0) //Handle layers value
+					{
+						reportStatus = commonCode::ReportStatus::LAYERS;
+					}
+					else //Handle other values
+					{
+						PrintErrorMsg(L"Unknown report value!");
+						return -1;
+					}
+				}
+				else
+				{
+					PrintErrorMsg(L"Multiple reports were given!");
+					return -1;
+				}
+			}
 			else
 			{
 				std::wstringstream errorMsg;
@@ -171,7 +216,40 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				break;
 			}
 
-			return commonCode::ConvertJsonToObj(inputFilename, outputFilename);
+			//Handle file conversion
+			std::vector<commonCode::Block> blocks{};
+			if (commonCode::ConvertJsonToObj(inputFilename, outputFilename, blocks) == -1) return -1;
+
+			//Handle reporting
+			switch (reportStatus)
+			{
+			case commonCode::ReportStatus::BLOCKS: //Report blocks
+			{
+				wprintf_s(L"\nReport:\n");
+				wprintf_s(L"\tinput file: %s\n", inputFilename.c_str());
+				wprintf_s(L"\n");
+
+				for (const commonCode::Block& b : blocks)
+				{
+					//...
+				}
+
+				break;
+			}
+
+			case commonCode::ReportStatus::LAYERS: //Report layers
+			{
+				//...
+
+				break;
+			}
+
+			case commonCode::ReportStatus::UNDEFINED: //Report nothing
+			default:
+				break;
+			}
+
+			return 0;
 		}
 		else
 		{
@@ -203,8 +281,21 @@ void PrintUsageMsg()
 	wprintf_s(L"Usage:\n");
 	wprintf_s(L"\t(help): cmdMinecraftTool\n");
 	wprintf_s(L"\t(help): cmdMinecraftTool help\n");
+	wprintf_s(L"\t(arguments): cmdMinecraftTool args\n");
 	wprintf_s(L"\t(command structure): cmdMinecraftTool [<arg_identifier> <arg_value>]\n");
+	wprintf_s(L"\n");
 
+	wprintf_s(L"\t(required arguments):\n");
+	wprintf_s(L"\t\t-i <inputFile>.json\n");
+	wprintf_s(L"\t\t\tinputFile --> name of input file, can also include path to different directory\n");
+
+	wprintf_s(L"\t(optional arguments):\n");
+	wprintf_s(L"\t\tcmdMinecraftTool args\n");
+	wprintf_s(L"\t\t\texecute this command to get an overview of all available arguments\n");
+	wprintf_s(L"\n");
+}
+void PrintArgsMsg()
+{
 	wprintf_s(L"\t(required arguments):\n");
 	wprintf_s(L"\t\t-i <inputFile>.json\n");
 	wprintf_s(L"\t\t\tinputFile --> name of input file, can also include path to different directory\n");

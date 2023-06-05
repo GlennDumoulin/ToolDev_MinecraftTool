@@ -2,18 +2,28 @@
 
 cmake_minimum_required(VERSION 3.22)
 
-project(MinecraftTool)
+project(MinecraftTool VERSION 1.0.0)
 
 add_subdirectory(CommonCodeProject)
 message("CommonCode include directory: ${CommonCodeIncludeDir}")
 add_subdirectory(CommandLineProject)
+add_subdirectory(GUIProject)
 
 target_include_directories(
 	cmdMinecraftTool PUBLIC
 	"${CommonCodeIncludeDir}"
 )
+target_include_directories(
+	guiMinecraftTool PUBLIC
+	"${CommonCodeIncludeDir}"
+)
 
-install(TARGETS cmdMinecraftTool DESTINATION bin)
+install(
+	TARGETS
+		cmdMinecraftTool
+		guiMinecraftTool
+	DESTINATION bin
+)
 
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/License.txt")

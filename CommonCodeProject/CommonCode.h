@@ -46,7 +46,7 @@ namespace commonCode
 
 	struct Block
 	{
-		const char* layerName;
+		const wchar_t* layerName;
 		bool isOpaque;
 		Vector3f pos;
 	};
@@ -59,6 +59,13 @@ namespace commonCode
 		RIGHT,
 		TOP,
 		BOTTOM,
+	};
+
+	enum class ReportStatus
+	{
+		UNDEFINED,
+		BLOCKS,
+		LAYERS,
 	};
 
 	std::vector<OpaqueNeighbourPos> CheckOpaqueNeighbours(const Block& blockToCheck, const std::vector<Block>& blocks)
@@ -108,7 +115,7 @@ namespace commonCode
 	void WriteFaces(FILE* pOFile, const std::vector<Block>& blocks)
 	{
 		std::vector<OpaqueNeighbourPos> opaqueNeighbours{};
-		std::string currentLayer{};
+		std::wstring currentLayer{};
 
 		for (int i{ 0 }; i < static_cast<int>(blocks.size()); ++i)
 		{
@@ -121,13 +128,8 @@ namespace commonCode
 				currentLayer = currentBlock.layerName;
 
 				//Set material
-				const size_t layerNameStrLen{ static_cast<size_t>(currentLayer.length()) };
-				wchar_t* layerNameWStr = new wchar_t[layerNameStrLen + 1];
-				mbstowcs_s(NULL, layerNameWStr, layerNameStrLen + 1, currentLayer.c_str(), layerNameStrLen);
-				layerNameWStr[0] -= 32; //Capitalize first character
-
 				fwprintf_s(pOFile, L"\n");
-				fwprintf_s(pOFile, L"usemtl %s\n", layerNameWStr);
+				fwprintf_s(pOFile, L"usemtl %s\n", currentLayer.c_str());
 			}
 
 			//Get opaque neighbours
@@ -178,14 +180,12 @@ namespace commonCode
 		}
 	}
 
-	int ConvertJsonToObj(const std::wstring& inputFilename, const std::wstring& outputFilename)
+	int ConvertJsonToObj(const std::wstring& inputFilename, const std::wstring& outputFilename, std::vector<Block>& blocks)
 	{
 		if (std::ifstream is{ inputFilename })
 		{
-			using namespace rapidjson;
-
-			IStreamWrapper isw{ is };
-			Document sceneDoc;
+			rapidjson::IStreamWrapper isw{ is };
+			rapidjson::Document sceneDoc;
 			sceneDoc.ParseStream(isw);
 
 			if (sceneDoc.IsArray())
@@ -217,36 +217,41 @@ namespace commonCode
 					fwprintf_s(pOFile, L"\n");
 
 					//Write blocks
-					std::vector<Block> blocks{};
-
-					for (Value::ConstValueIterator layerIt = sceneDoc.Begin(); layerIt != sceneDoc.End(); ++layerIt)
+					for (rapidjson::Value::ConstValueIterator layerIt = sceneDoc.Begin(); layerIt != sceneDoc.End(); ++layerIt)
 					{
-						const Value& layer{ *layerIt };
+						const rapidjson::Value& layer{ *layerIt };
 
 						if (layer.HasMember("layer") && layer.HasMember("opaque") && layer.HasMember("positions"))
 						{
-							const Value& layerName{ layer["layer"] };
-							const Value& isOpaque{ layer["opaque"] };
-							const Value& positions{ layer["positions"] };
+							const rapidjson::Value& layerName{ layer["layer"] };
+							const rapidjson::Value& isOpaque{ layer["opaque"] };
+							const rapidjson::Value& positions{ layer["positions"] };
 
 							if (layerName.IsString() && isOpaque.IsBool() && positions.IsArray())
 							{
 								//Add blocks
-								for (Value::ConstValueIterator blockIt = positions.Begin(); blockIt != positions.End(); ++blockIt)
+								for (rapidjson::Value::ConstValueIterator blockIt = positions.Begin(); blockIt != positions.End(); ++blockIt)
 								{
-									const Value& pos{ *blockIt };
+									const rapidjson::Value& pos{ *blockIt };
 
 									if (pos.IsArray() && pos.Size() == 3)
 									{
-										const Value& x{ pos[1] };
-										const Value& y{ pos[2] };
-										const Value& z{ pos[0] };
+										const rapidjson::Value& x{ pos[1] };
+										const rapidjson::Value& y{ pos[2] };
+										const rapidjson::Value& z{ pos[0] };
 
 										if (x.IsInt() && y.IsInt() && z.IsInt())
 										{
+											//Convert layer name to wstring
+											const std::string layerNameStr{ layerName.GetString() };
+											const size_t layerNameStrLen{ static_cast<size_t>(layerNameStr.length()) };
+											wchar_t* layerNameWStr = new wchar_t[layerNameStrLen + 1];
+											mbstowcs_s(NULL, layerNameWStr, layerNameStrLen + 1, layerNameStr.c_str(), layerNameStrLen);
+											layerNameWStr[0] -= 32; //Capitalize first character
+
 											//Create block
 											Block block{
-												layerName.GetString(),
+												layerNameWStr,
 												isOpaque.GetBool(),
 												Vector3f{ x.GetInt(), y.GetInt(), z.GetInt() }
 											};
