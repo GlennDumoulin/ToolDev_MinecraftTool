@@ -180,7 +180,7 @@ namespace commonCode
 		}
 	}
 
-	int ConvertJsonToObj(const std::wstring& inputFilename, const std::wstring& outputFilename, std::vector<Block>& blocks)
+	int ConvertJsonToObj(const std::wstring& inputFilename, const std::wstring& outputFilename, std::vector<Block>& blocks, wchar_t*& message)
 	{
 		if (std::ifstream is{ inputFilename })
 		{
@@ -192,6 +192,7 @@ namespace commonCode
 			{
 				FILE* pOFile = nullptr;
 				_wfopen_s(&pOFile, outputFilename.c_str(), L"w+,ccs=UTF-8");
+
 				if (pOFile != nullptr) //File was succesfully created
 				{
 					//Initialize file with comment
@@ -290,23 +291,24 @@ namespace commonCode
 					WriteFaces(pOFile, blocks);
 
 					fclose(pOFile);
-					wprintf_s(L"Output file was succesfully created!\n");
+					message = L"Output file was succesfully created!\n";
 					return 0;
 				}
-				else {
-					wprintf_s(L"Failed to create output file!\n");
+				else
+				{
+					message = L"Failed to create output file!\n";
 					return -1;
 				}
 			}
 			else
 			{
-				wprintf_s(L"Failed to parse input file!\n");
+				message = L"Failed to parse input file!\n";
 				return -1;
 			}
 		}
 		else
 		{
-			wprintf_s(L"Couldn't find input file!\n");
+			message = L"Couldn't find input file!\n";
 			return -1;
 		}
 	}

@@ -4,6 +4,9 @@
 
 #include "CommonCode.h"
 
+#include <map>
+#include <algorithm>
+
 enum class OutputLocationStatus
 {
 	UNDEFINED,
@@ -72,7 +75,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 					}
 					else
 					{
-						PrintErrorMsg(L"Input has to be .json!");
+						PrintErrorMsg(L"Input has to be .json and filename must contain at least 1 character!");
 						return -1;
 					}
 				}
@@ -92,7 +95,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 					}
 					else
 					{
-						PrintErrorMsg(L"Output has to be .obj!");
+						PrintErrorMsg(L"Output has to be .obj and filename must contain at least 1 character!");
 						return -1;
 					}
 				}
@@ -173,6 +176,9 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 		//Check file names
 		if (inputFilename.compare(L"") != 0)
 		{
+			//Correct slashes into backslashes
+			std::replace(inputFilename.begin(), inputFilename.end(), '/', '\\');
+
 			if (outputFilename.compare(L"") == 0)
 			{
 				//Set default output
@@ -181,6 +187,11 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				const std::wstring jsonExtension{ L".json" };
 				const size_t extensionIdx{ outputFilename.rfind(jsonExtension.c_str()) };
 				outputFilename.replace(extensionIdx, jsonExtension.length(), L".obj");
+			}
+			else
+			{
+				//Correct slashes into backslashes
+				std::replace(outputFilename.begin(), outputFilename.end(), '/', '\\');
 			}
 
 			//Set output location
@@ -218,7 +229,16 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 
 			//Handle file conversion
 			std::vector<commonCode::Block> blocks{};
-			if (commonCode::ConvertJsonToObj(inputFilename, outputFilename, blocks) == -1) return -1;
+			wchar_t* message{ L"" };
+			if (commonCode::ConvertJsonToObj(inputFilename, outputFilename, blocks, message) == -1)
+			{
+				wprintf_s(message);
+				return -1;
+			}
+			else
+			{
+				wprintf_s(message);
+			}
 
 			//Handle reporting
 			switch (reportStatus)
@@ -226,20 +246,49 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			case commonCode::ReportStatus::BLOCKS: //Report blocks
 			{
 				wprintf_s(L"\nReport:\n");
-				wprintf_s(L"\tinput file: %s\n", inputFilename.c_str());
-				wprintf_s(L"\n");
 
+				int blockIdx{ 0 };
 				for (const commonCode::Block& b : blocks)
 				{
-					//...
+					wprintf_s(
+						L"id: %d\tlayer: %s\topaque: %s\tposition: %.4f, %.4f, %.4f\n",
+						blockIdx, b.layerName, b.isOpaque ? L"true" : L"false", b.pos.x, b.pos.y, b.pos.z
+					);
+					++blockIdx;
 				}
+
+				wprintf_s(L"\n");
 
 				break;
 			}
 
 			case commonCode::ReportStatus::LAYERS: //Report layers
 			{
-				//...
+				std::map<const std::wstring, int> layers{};
+				for (const commonCode::Block& b : blocks)
+				{
+					const std::wstring layername{ b.layerName };
+
+					if (layers.find(layername) != layers.end())
+					{
+						++layers[layername];
+					}
+					else
+					{
+						layers[layername] = 1;
+					}
+				}
+
+				wprintf_s(L"\nReport:\n");
+
+				int layerIdx{ 0 };
+				for (const auto& layerIt : layers)
+				{
+					wprintf_s(L"id: %d\t layer name: %s\tnr of blocks: %d\n", layerIdx, layerIt.first.c_str(), layerIt.second);
+					++layerIdx;
+				}
+				
+				wprintf_s(L"\n");
 
 				break;
 			}
@@ -267,7 +316,7 @@ bool IsValidFileArg(const wchar_t* arg, const wchar_t* extension)
 	const std::wstring argStr{ arg };
 	const size_t extensionIdx{ argStr.rfind(extension) };
 
-	if (extensionIdx != std::wstring::npos)
+	if (extensionIdx != std::wstring::npos && extensionIdx != 0)
 	{
 		const std::wstring extensionStr{ argStr.substr(extensionIdx) };
 		return extensionStr.compare(extension) == 0;
@@ -308,6 +357,10 @@ void PrintArgsMsg()
 	wprintf_s(L"\t\t\tcmd --> output file location == current cmd location\n");
 	wprintf_s(L"\t\t\tinput --> output file location == input file location\n");
 	wprintf_s(L"\t\t\t\tnot defined --> output file location is unchanged\n");
+	wprintf_s(L"\t\t-r <blocks|layers>\n");
+	wprintf_s(L"\t\t\tblocks --> report blocks info\n");
+	wprintf_s(L"\t\t\tlayers --> report layer info\n");
+	wprintf_s(L"\t\t\t\tnot defined --> no report\n");
 	wprintf_s(L"\n");
 
 	wprintf_s(L"Examples:\n");
