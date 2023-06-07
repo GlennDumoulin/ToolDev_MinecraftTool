@@ -229,15 +229,15 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 
 			//Handle file conversion
 			std::vector<commonCode::Block> blocks{};
-			wchar_t* message{ L"" };
+			std::wstring message{ L"" };
 			if (commonCode::ConvertJsonToObj(inputFilename, outputFilename, blocks, message) == -1)
 			{
-				wprintf_s(message);
+				wprintf_s(message.c_str());
 				return -1;
 			}
 			else
 			{
-				wprintf_s(message);
+				wprintf_s(message.c_str());
 			}
 
 			//Handle reporting
@@ -252,7 +252,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				{
 					wprintf_s(
 						L"id: %d\tlayer: %s\topaque: %s\tposition: %.4f, %.4f, %.4f\n",
-						blockIdx, b.layerName, b.isOpaque ? L"true" : L"false", b.pos.x, b.pos.y, b.pos.z
+						blockIdx, b.layerName.c_str(), b.isOpaque ? L"true" : L"false", b.pos.x, b.pos.y, b.pos.z
 					);
 					++blockIdx;
 				}

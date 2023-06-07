@@ -12,7 +12,7 @@
 
 namespace commonCode
 {
-	bool AreEqual(const float a, const float b, const float epsilon = FLT_EPSILON)
+	inline bool AreEqual(const float a, const float b, const float epsilon = FLT_EPSILON)
 	{
 		return fabs(a - b) < epsilon;
 	}
@@ -40,13 +40,13 @@ namespace commonCode
 				AreEqual(x, other.x)
 				&& AreEqual(y, other.y)
 				&& AreEqual(z, other.z)
-				);
+			);
 		}
 	};
 
 	struct Block
 	{
-		const wchar_t* layerName;
+		const std::wstring layerName;
 		bool isOpaque;
 		Vector3f pos;
 	};
@@ -63,12 +63,12 @@ namespace commonCode
 
 	enum class ReportStatus
 	{
-		UNDEFINED,
-		BLOCKS,
-		LAYERS,
+		UNDEFINED = -1,
+		BLOCKS = 1,
+		LAYERS = 2,
 	};
 
-	std::vector<OpaqueNeighbourPos> CheckOpaqueNeighbours(const Block& blockToCheck, const std::vector<Block>& blocks)
+	inline std::vector<OpaqueNeighbourPos> CheckOpaqueNeighbours(const Block& blockToCheck, const std::vector<Block>& blocks)
 	{
 		std::vector<OpaqueNeighbourPos> opaqueNeighbours{};
 
@@ -95,7 +95,7 @@ namespace commonCode
 		return opaqueNeighbours;
 	}
 
-	void WriteVertices(FILE* pOFile, const Vector3f& blockPos)
+	inline void WriteVertices(FILE* pOFile, const Vector3f& blockPos)
 	{
 		float xPos{ blockPos.x };
 		float yPos{ blockPos.y };
@@ -112,7 +112,7 @@ namespace commonCode
 		fwprintf_s(pOFile, L"v %.4f %.4f %.4f\n", xPos + 1.f, yPos + 1.f, zPos + 1.f);
 	}
 
-	void WriteFaces(FILE* pOFile, const std::vector<Block>& blocks)
+	inline void WriteFaces(FILE* pOFile, const std::vector<Block>& blocks)
 	{
 		std::vector<OpaqueNeighbourPos> opaqueNeighbours{};
 		std::wstring currentLayer{};
@@ -180,7 +180,7 @@ namespace commonCode
 		}
 	}
 
-	int ConvertJsonToObj(const std::wstring& inputFilename, const std::wstring& outputFilename, std::vector<Block>& blocks, wchar_t*& message)
+	inline int ConvertJsonToObj(const std::wstring& inputFilename, const std::wstring& outputFilename, std::vector<Block>& blocks, std::wstring& message)
 	{
 		if (std::ifstream is{ inputFilename })
 		{
@@ -252,11 +252,12 @@ namespace commonCode
 
 											//Create block
 											Block block{
-												layerNameWStr,
+												std::wstring{ layerNameWStr },
 												isOpaque.GetBool(),
 												Vector3f{ x.GetInt(), y.GetInt(), z.GetInt() }
 											};
 											blocks.push_back(block);
+											delete[] layerNameWStr;
 
 											//Add vertices
 											WriteVertices(pOFile, block.pos);

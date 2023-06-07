@@ -2,13 +2,11 @@
 
 TableModel::TableModel()
 {
-	m_Vectors.push_back({ "vector1", 1, 2, 3 });
-	m_Vectors.push_back({ "vector2", 4, 5, 6 });
 }
 
 int TableModel::getNumRows()
 {
-	return static_cast<int>(m_Vectors.size());
+	return static_cast<int>(m_Data.size());
 }
 
 void TableModel::paintRowBackground(Graphics& g, int rowNumber, int width, int height, bool rowIsSelected)
@@ -28,42 +26,42 @@ void TableModel::paintRowBackground(Graphics& g, int rowNumber, int width, int h
 
 void TableModel::paintCell(Graphics& g, int rowNumber, int columnId, int width, int height, bool rowIsSelected)
 {
-	if (rowNumber < m_Vectors.size())
+	if (rowNumber < m_Data.size())
 	{
 		g.setColour(rowIsSelected ? Colour{ 64, 64, 64 } : Colour{ 243, 243, 243 });
 
-		NamedVector3& vector = m_Vectors[rowNumber];
+		commonCode::Block& block = m_Data[rowNumber];
 		switch (columnId)
 		{
 		case 1:
 		{
-			g.drawText(vector.name, 40, 0, width-10, height, Justification::centredLeft);
+			g.drawText(String{ block.layerName.c_str() }, 0, 0, width - 10, height, Justification::centredLeft);
 			break;
 		}
 
 		case 2:
 		{
-			g.drawText(String{ vector.x }, 0, 0, width, height, Justification::centredLeft);
+			g.drawText(String{ block.pos.x }, 0, 0, width, height, Justification::centredLeft);
 			break;
 		}
 
 		case 3:
 		{
-			g.drawText(String{ vector.y }, 0, 0, width, height, Justification::centredLeft);
+			g.drawText(String{ block.pos.y }, 0, 0, width, height, Justification::centredLeft);
 			break;
 		}
 
 		case 4:
 		{
-			g.drawText(String{ vector.z }, 0, 0, width, height, Justification::centredLeft);
+			g.drawText(String{ block.pos.z }, 0, 0, width, height, Justification::centredLeft);
 			break;
 		}
 
-		/*case 5:
+		case 5:
 		{
-			g.drawText(String{ vector.isOpaque ? "true" : "false" }, 0, 0, width, height, Justification::centredLeft);
+			g.drawText(String{ block.isOpaque ? "true" : "false" }, 0, 0, width, height, Justification::centredLeft);
 			break;
-		}*/
+		}
 		}
 	}
 }

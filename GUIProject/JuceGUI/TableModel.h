@@ -3,6 +3,7 @@
 #include <JuceHeader.h>
 
 #include "NamedVector3.h"
+#include "CommonCode.h"
 
 class TableModel : public juce::TableListBoxModel
 {
@@ -20,6 +21,13 @@ public:
 		bool 	rowIsSelected
 	) override;
 
+	void SetData(const std::vector<commonCode::Block>& data)
+	{
+		m_Data.clear();
+		for (const commonCode::Block& block : data)
+			m_Data.push_back(block);
+	}
+
 private:
-	std::vector<NamedVector3> m_Vectors;
+	std::vector<commonCode::Block> m_Data;
 };
