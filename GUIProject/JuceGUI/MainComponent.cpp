@@ -258,6 +258,7 @@ void MainComponent::ConvertFile()
         m_DataTable.getHeader().addColumn("Nr of blocks", 2, 100, 50, 100);
 
         //Set data table visible
+        m_DataTable.repaint();
         m_DataTable.setVisible(true);
 
         break;
